@@ -1,0 +1,35 @@
+# https://sachinmalhotra.medium.com/do-you-have-a-great-github-readme-b8a59b066d02
+name: Spotify Now Playing
+on:
+  schedule:
+    - cron: '5 8 * * 0' 
+  workflow_dispatch:
+
+jobs:
+  update-readme-with-blog:
+    name: Update this repo's Readme with Spotify data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set UP Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: requirements.txt
+        run: |
+          pip install -r ./scripts/spotifyreadme/requirementes.txt
+      - name: generate
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_SERET_ID: ${{ secrets.SPOTIFY_SERET_ID }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+        run:
+          python ./scripts/spotifyreadme/spotify.py
+      - name: Commit and push if changed
+        run: |
+          git add . 
+          git config --global user.email "claireelyse1996@gmail.com"
+          git config --global user.name "claireelyse"
+          git commit -m "Updated spotify.svg"
+          git push origin main
