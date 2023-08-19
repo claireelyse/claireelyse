@@ -27,12 +27,10 @@ RECENTLY_PLAYING_URL = (
 
 app = Flask(__name__)
 
-
 def getAuth():
     return b64encode(f"{SPOTIFY_CLIENT_ID}:{SPOTIFY_SECRET_ID}".encode()).decode(
         "ascii"
     )
-
 
 def refreshToken():
     data = {
@@ -87,7 +85,7 @@ def barGen(barCount):
 
 def getTemplate():
     try:
-        file = open("api/templates.json", "r")
+        file = open("templates.json", "r")
         templates = json.loads(file.read())
         return templates["templates"][templates["current-theme"]]
     except Exception as e:
@@ -139,24 +137,18 @@ def makeSVG(data, background_color, border_color):
         "border_color": border_color
     }
 
-    return render_template(getTemplate(), **dataDict)
+    with app.app_context():
+        return render_template(getTemplate(), **dataDict)
 
-
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-@app.route('/with_parameters')
-def catch_all(path):
-    background_color = request.args.get('background_color') or "181414"
-    border_color = request.args.get('border_color') or "181414"
+def catch_all():
+    background_color = "181414"
+    border_color = "181414"
 
     data = nowPlaying()
     svg = makeSVG(data, background_color, border_color)
 
-    resp = Response(svg, mimetype="image/svg+xml")
-    resp.headers["Cache-Control"] = "s-maxage=1"
-
-    return resp
-
+    with open('spotify.svg', 'w') as f:
+        f.write(svg)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True, port=os.getenv("PORT") or 5000)
+    catch_all()
